@@ -1,12 +1,18 @@
 #!/bin/bash
 
-function change_branch {
-  git checkout $1
-  not_master=$?
-  if [[ "$not_master" == "0" ]]; then
-    echo "ATTENTION The branch is $1"
-   git checkout $1
-  fi
+function try_change_branch {
+  all=("$@")
+  for branch in "${all[@]}";
+  do
+    git checkout $branch
+    not_master=$?
+    if [[ "$not_master" == "0" ]]; then
+      echo "ATTENTION The branch is $branch"
+      git reset --hard origin/$branch
+      git pull origin $branch
+      break
+    fi
+  done
 }
 
 cat hw.txt |while read i;
@@ -15,13 +21,9 @@ do
   pushd $name;
   git fetch -a
 
-  change_branch "my-stuff"
-  change_branch "stuff"
-  change_branch "myChanges"
-  change_branch "primo_homework"
-  change_branch "first_homework"
-  change_branch "homework/print-nodes"
-  change_branch "uniform_cost"
+  branches=("my-stuff" "stuff" "myChanges" "primo_homework" "first_homework" "homework/print-nodes" "uniform_cost" "master")
+
+  try_change_branch "${branches[@]}"
 
   pipenv install -r requirements.txt;
   pipenv install -e .;
